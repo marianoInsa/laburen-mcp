@@ -22,7 +22,7 @@ productsRoutes.get('/', async (c) => {
 });
 
 // 2 - Explorar productos por nombre
-// GET /products/name/:Camiseta
+// GET /products/name/:name
 productsRoutes.get('/name/:name', async (c) => {
     try {
         const { name } = c.req.param();

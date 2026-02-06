@@ -2,6 +2,8 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import productsRoutes from './routes/products';
+import cartsRoutes from './routes/carts';
+import cartItemsRoutes from './routes/cart_items';
 
 // interfaz para la DB
 export type Bindings = {
@@ -26,5 +28,7 @@ app.notFound((c) => {
 });
 
 app.route('/api/products', productsRoutes);
+app.route('/api/carts', cartsRoutes);
+app.route('/api/cart-items', cartItemsRoutes);
 
 export default app;

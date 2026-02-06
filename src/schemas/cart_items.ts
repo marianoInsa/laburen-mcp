@@ -9,8 +9,8 @@ import { cartsTable } from "./carts";
 export const cartItemsTable = sqliteTable(
   "cart_items",
   {
-    id: integer().primaryKey().notNull(),
-    cart_id: text().notNull().references(() => cartsTable.id),
+    id: integer().primaryKey({ autoIncrement: true }),
+    cart_id: integer().notNull().references(() => cartsTable.id),
     product_id: text().notNull().references(() => productsTable.id),
     qty: integer().notNull()
   },
