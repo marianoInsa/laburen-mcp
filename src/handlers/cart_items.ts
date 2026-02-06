@@ -23,7 +23,8 @@ export const addCartItem = async (
 	const cart = await orm
         .select()
         .from(cartsTable)
-        .where(eq(cartsTable.id, cart_id));
+        .where(eq(cartsTable.id, cart_id))
+        .all();
 
 	if (!cart || cart.length === 0) {
 		return { error: 'CART_NOT_FOUND' as const };
@@ -32,7 +33,8 @@ export const addCartItem = async (
 	const product = await orm
 		.select()
 		.from(productsTable)
-		.where(eq(productsTable.id, product_id));
+		.where(eq(productsTable.id, product_id))
+		.all();
         
 	if (!product || product.length === 0) {
 		return { error: 'PRODUCT_NOT_FOUND' as const };
@@ -41,7 +43,14 @@ export const addCartItem = async (
 	const inserted = await orm
 		.insert(cartItemsTable)
 		.values({ cart_id, product_id, qty })
-		.returning();
+		.onConflictDoUpdate({
+			target: [cartItemsTable.cart_id, cartItemsTable.product_id],
+			set: {
+				qty: sql`${cartItemsTable.qty} + ${qty}`,
+			},
+		})
+		.returning()
+		.all();
 
     // actualizar el updated_at del carrito
     await orm

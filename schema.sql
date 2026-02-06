@@ -39,6 +39,10 @@ CREATE TABLE cart_items (
     cart_id INTEGER,
     product_id TEXT,
     qty INTEGER NOT NULL,
+    UNIQUE(cart_id, product_id),
     FOREIGN KEY(cart_id) REFERENCES carts(id) ON DELETE CASCADE,
     FOREIGN KEY(product_id) REFERENCES products(id) ON DELETE CASCADE
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS cart_items_cart_id_product_id_unique
+ON cart_items (cart_id, product_id);
