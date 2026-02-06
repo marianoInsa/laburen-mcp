@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import type { Bindings } from '../index';
-import { createCart, getCartById } from '../handlers/carts';
+import { createCart, getCartById, deleteCartById } from '../handlers/carts';
 import { addCartItem } from '../handlers/cart_items';
 
 const cartsRoutes = new Hono<{ Bindings: Bindings }>();
@@ -63,5 +63,27 @@ cartsRoutes.get('/:id', async (c) => {
 		return c.json({ message: 'Error al obtener carrito' }, 500);
 	}
 });
+
+// 3 - Eliminar carrito por ID
+// DELETE /carts/:id
+cartsRoutes.delete('/:id', async (c) => {
+    try {
+        const id = Number(c.req.param('id'));
+        if (!Number.isFinite(id)) {
+            return c.json({ message: 'El parámetro "id" debe ser numérico' }, 400);
+        }
+
+		const result = await deleteCartById(c.env.DB, id);
+		if (!result || result.meta.changes === 0) {
+			return c.json({ message: 'Carrito no encontrado' }, 404);
+		}
+        
+        return c.json({ message: 'Carrito eliminado correctamente' });
+    } catch (error) {
+        console.error('Error en DELETE /carts/:id:', error);
+        return c.json({ message: 'Error al eliminar carrito' }, 500);
+    }
+});
+
 
 export default cartsRoutes;

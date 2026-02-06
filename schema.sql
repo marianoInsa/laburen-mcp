@@ -22,7 +22,8 @@ CREATE TABLE carts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_phone TEXT NOT NULL,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TEXT
 );
 
 -- actualizar updated_at al modificar un carrito

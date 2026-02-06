@@ -20,3 +20,13 @@ export const getCartById = async (db: D1Database, id: number) => {
         .where(eq(cartsTable.id, id))
         .all();
 };
+
+export const deleteCartById = async (db: D1Database, id: number) => {
+    // Soft delete: set deleted_at timestamp
+    const orm = drizzle(db);
+    const result = await orm
+        .update(cartsTable)
+        .set({ deleted_at: new Date().toISOString() })
+        .where(eq(cartsTable.id, id));
+    return result;
+};
