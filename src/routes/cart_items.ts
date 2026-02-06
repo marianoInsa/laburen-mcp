@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import type { Bindings } from '../index';
-import { addCartItem, listCartItems } from '../handlers/cart_items';
+import { addCartItem, listCartItems, removeCartItem } from '../handlers/cart_items';
 
 const cartItemsRoutes = new Hono<{ Bindings: Bindings }>();
 
@@ -49,6 +49,37 @@ cartItemsRoutes.post('/', async (c) => {
 	} catch (error) {
 		console.error('Error en POST /cart-items:', error);
 		return c.json({ message: 'Error al agregar item al carrito' }, 500);
+	}
+});
+
+// 3 - Eliminar item
+// DELETE /cart-items { cart_id, product_id, qty }
+cartItemsRoutes.delete('/', async (c) => {
+	try {
+		const body = await c.req.json<{ cart_id?: number; product_id?: string; qty?: number }>();
+		if (!body?.cart_id || !body?.product_id) {
+			return c.json({ message: 'Se requieren "cart_id" y "product_id"' }, 400);
+		}
+
+		const qty = body.qty ?? 1;
+		if (!Number.isFinite(qty) || qty <= 0) {
+			return c.json({ message: 'El campo "qty" debe ser mayor a 0' }, 400);
+		}
+
+		const result = await removeCartItem(c.env.DB, {
+			cart_id: body.cart_id,
+			product_id: body.product_id,
+			qty,
+		});
+
+		if ('error' in result && result.error === 'ITEM_NOT_FOUND') {
+			return c.json({ message: 'Item no encontrado en el carrito' }, 404);
+		}
+
+		return c.json({ item: result.item }, 200);
+	} catch (error) {
+		console.error('Error en DELETE /cart-items:', error);
+		return c.json({ message: 'Error al eliminar item del carrito' }, 500);
 	}
 });
 

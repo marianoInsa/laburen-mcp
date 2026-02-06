@@ -1,4 +1,4 @@
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/d1';
 import { cartItemsTable } from '../schemas/cart_items';
 import { cartsTable } from '../schemas/carts';
@@ -59,4 +59,66 @@ export const addCartItem = async (
         .where(eq(cartsTable.id, cart_id));
 
 	return { item: inserted[0] ?? null };
+};
+
+export const removeCartItem = async (
+	db: D1Database,
+	params: { cart_id: number; product_id: string; qty: number }
+) => {
+	const orm = drizzle(db);
+	const { cart_id, product_id, qty } = params;
+
+	const items = await orm
+		.select()
+		.from(cartItemsTable)
+		.where(
+			and(
+				eq(cartItemsTable.cart_id, cart_id),
+				eq(cartItemsTable.product_id, product_id)
+			)
+		)
+		.all();
+
+	if (!items || items.length === 0) {
+		return { error: 'ITEM_NOT_FOUND' as const };
+	}
+
+	const currentQty = items[0].qty;
+
+	if (qty >= currentQty) {
+		await orm
+			.delete(cartItemsTable)
+			.where(
+				and(
+					eq(cartItemsTable.cart_id, cart_id),
+					eq(cartItemsTable.product_id, product_id)
+				)
+			);
+
+		await orm
+			.update(cartsTable)
+			.set({ updated_at: sql`(current_timestamp)` })
+			.where(eq(cartsTable.id, cart_id));
+
+		return { item: null };
+	}
+
+	const updated = await orm
+		.update(cartItemsTable)
+		.set({ qty: currentQty - qty })
+		.where(
+			and(
+				eq(cartItemsTable.cart_id, cart_id),
+				eq(cartItemsTable.product_id, product_id)
+			)
+		)
+		.returning()
+		.all();
+
+	await orm
+		.update(cartsTable)
+		.set({ updated_at: sql`(current_timestamp)` })
+		.where(eq(cartsTable.id, cart_id));
+
+	return { item: updated[0] ?? null };
 };
