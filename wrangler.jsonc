@@ -8,11 +8,16 @@
 	"main": "src/index.ts",
 	"compatibility_date": "2026-02-05",
 	"observability": {
-		"enabled": true
+		"enabled": true,
 	},
-	"compatibility_flags": [
-		"nodejs_compat"
-	]
+	"compatibility_flags": ["nodejs_compat"],
+	"d1_databases": [
+		{
+			"binding": "DB", // available in your Worker on env.DB
+			"database_name": "laburen-challenge-db",
+			"database_id": "63bf046b-21ef-434a-8cf0-8ac80babe732",
+		},
+	],
 	/**
 	 * Smart Placement
 	 * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
