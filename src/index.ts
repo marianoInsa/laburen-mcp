@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
-import { eq } from 'drizzle-orm';
+import { eq, like, and } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/d1';
 import { productsTable } from './schemas/products';
 
@@ -30,24 +30,73 @@ app.notFound((c) => {
 // 1 - Explorar productos
 // GET /products
 app.get('/api/products', async (c) => {
-	const db = drizzle(c.env.DB);
-	const products = await db.select().from(productsTable).all();
-	if (!products) {
-		return c.json({ message: 'No se encontraron productos' }, 404);
+	try {
+		const db = drizzle(c.env.DB);
+		const products = await db
+			.select()
+			.from(productsTable)
+			.all();
+		if (!products) {
+			return c.json({ message: 'No se encontraron productos' }, 404);
+		}
+		return c.json(products);
+	} catch (error) {
+		console.error('Error en GET /products:', error);
+		return c.json({ message: 'Error al obtener productos' }, 500);
 	}
-	return c.json(products);
 });
 
-// 2 - Explorar un producto por ID
+// 2 - Explorar productos por nombre o color
+// GET /products/search?name=Camiseta&color=Rojo
+app.get('/api/products/search', async (c) => {
+	try {
+		const db = drizzle(c.env.DB);
+		const { name, color } = c.req.query();
+
+		if (!name && !color) {
+			return c.json({ message: 'Se requiere al menos un parámetro de búsqueda' }, 400);
+		}
+
+		const products = await db
+			.select()
+			.from(productsTable)
+			.where(
+				and(
+					name ? like(productsTable.name, `%${name}%`) : undefined,
+					color ? like(productsTable.color, `%${color}%`) : undefined
+				)
+			)
+			.all();
+
+		if (!products || products.length === 0) {
+			return c.json({ message: 'No se encontraron productos' }, 404);
+		}
+		return c.json(products);
+	} catch (error) {
+		console.error('Error en GET /products/search:', error);
+		return c.json({ message: 'Error al buscar productos' }, 500);
+	}
+});
+
+// 3 - Explorar un producto por ID
 // GET /products/:id
 app.get('/api/products/:id', async (c) => {
-	const db = drizzle(c.env.DB);
-	const { id } = c.req.param();
-	const product = await db.select().from(productsTable).where(eq(productsTable.id, id));
-	if (!product) {
-		return c.json({ message: 'Producto no encontrado' }, 404);
+	try {
+		const db = drizzle(c.env.DB);
+		const { id } = c.req.param();
+		const products = await db
+			.select()
+			.from(productsTable)
+			.where(eq(productsTable.id, id))
+			.all();
+		if (!products || products.length === 0) {
+			return c.json({ message: 'Producto no encontrado' }, 404);
+		}
+		return c.json(products[0]);
+	} catch (error) {
+		console.error('Error en GET /products/:id:', error);
+		return c.json({ message: 'Error al obtener producto' }, 500);
 	}
-	return c.json(product);
 });
 
 export default app;
