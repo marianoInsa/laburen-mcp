@@ -17,6 +17,9 @@
 		"wrangler": "^4.63.0"
 	},
 	"dependencies": {
+		"dotenv": "^17.2.4",
+		"drizzle-kit": "^0.31.8",
+		"drizzle-orm": "^0.45.1",
 		"hono": "^4.11.7"
 	}
 }
