@@ -57,62 +57,44 @@ mcpServer.registerTool(
 );
 
 mcpServer.registerTool(
-    'carts.create',
+    'create_cart',
     {
-        description: 'Crear un carrito',
+        description: 'Crear un carrito y agregar el primer item',
         inputSchema: z.object({
             user_phone: z.string(),
+            product_id: z.string(),
+            qty: z.number().int().positive(),
         }),
     },
-    async ({ user_phone }) => {
+    async ({ user_phone, product_id, qty }) => {
         const cart = await createCart(getDb(), user_phone);
-        return {
-            content: [
-                {
-                    type: 'text',
-                    text: JSON.stringify(cart),
-                },
-            ],
-        };
-    }
-);
+        if (!cart) {
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({ error: 'Creación de carrito fallida' }),
+                    },
+                ],
+            };
+        }
 
-mcpServer.registerTool(
-    'carts.getById',
-    {
-        description: 'Obtener un carrito por ID',
-        inputSchema: z.object({
-            id: z.number().int(),
-        }),
-    },
-    async ({ id }) => {
-        const carts = await getCartById(getDb(), id);
-        return {
-            content: [
-                {
-                    type: 'text',
-                    text: JSON.stringify(carts),
-                },
-            ],
-        };
-    }
-);
+        const result = await addCartItem(getDb(), {
+            cart_id: cart.id,
+            product_id,
+            qty,
+        });
 
-mcpServer.registerTool(
-    'carts.deleteById',
-    {
-        description: 'Eliminar (soft delete) un carrito por ID',
-        inputSchema: z.object({
-            id: z.number().int(),
-        }),
-    },
-    async ({ id }) => {
-        const result = await deleteCartById(getDb(), id);
+        const payload =
+            'error' in result
+                ? { cart_id: cart.id, error: result.error }
+                : { cart_id: cart.id, item: result.item };
+
         return {
             content: [
                 {
                     type: 'text',
-                    text: JSON.stringify(result),
+                    text: JSON.stringify(payload),
                 },
             ],
         };

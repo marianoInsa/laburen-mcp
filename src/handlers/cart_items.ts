@@ -33,7 +33,12 @@ export const addCartItem = async (
 	const product = await orm
 		.select()
 		.from(productsTable)
-		.where(eq(productsTable.id, product_id))
+		.where(
+			and(
+				eq(productsTable.id, product_id),
+				eq(productsTable.available, 1)
+			)
+		)
 		.all();
         
 	if (!product || product.length === 0) {
