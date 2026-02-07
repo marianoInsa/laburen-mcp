@@ -17,9 +17,12 @@
 		"wrangler": "^4.63.0"
 	},
 	"dependencies": {
+		"@hono/mcp": "^0.2.3",
+		"@modelcontextprotocol/sdk": "^1.26.0",
 		"dotenv": "^17.2.4",
 		"drizzle-kit": "^0.31.8",
 		"drizzle-orm": "^0.45.1",
-		"hono": "^4.11.7"
+		"hono": "^4.11.8",
+		"zod": "^4.25.0"
 	}
 }
