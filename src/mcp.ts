@@ -28,59 +28,28 @@ const mcpServer = new McpServer({
 });
 
 mcpServer.registerTool(
-    'products.list',
+    'list_products',
     {
-        description: 'Listar todos los productos',
+        description: 'Listar todos los productos disponibles o filtrar por nombre. Si se proporciona product_id, buscar por ID un producto específico.',
+        inputSchema: z.object({
+            product_id: z.string().optional(),
+            name: z.string().optional(),
+        }),
     },
-    async () => {
-        const products = await listProducts(getDb());
+    async ({ product_id, name }) => {
+        let products = [];
+        if (product_id) {
+            products = await getProductById(getDb(), product_id, true);
+        } else if (name) {
+            products = await searchProductsByName(getDb(), name, true);
+        } else {
+            products = await listProducts(getDb(), true);
+        }
         return {
             content: [
                 {
                     type: 'text',
                     text: JSON.stringify(products),
-                },
-            ],
-        };
-    }
-);
-
-mcpServer.registerTool(
-    'products.searchByName',
-    {
-        description: 'Buscar productos por nombre',
-        inputSchema: z.object({
-            name: z.string(),
-        }),
-    },
-    async ({ name }) => {
-        const products = await searchProductsByName(getDb(), name);
-        return {
-            content: [
-                {
-                    type: 'text',
-                    text: JSON.stringify(products),
-                },
-            ],
-        };
-    }
-);
-
-mcpServer.registerTool(
-    'products.getById',
-    {
-        description: 'Obtener un producto por ID',
-        inputSchema: z.object({
-            id: z.string(),
-        }),
-    },
-    async ({ id }) => {
-        const product = await getProductById(getDb(), id);
-        return {
-            content: [
-                {
-                    type: 'text',
-                    text: JSON.stringify(product),
                 },
             ],
         };
