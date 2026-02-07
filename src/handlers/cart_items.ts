@@ -30,6 +30,7 @@ export const addCartItem = async (
 		return { error: 'CART_NOT_FOUND' as const };
 	}
 
+	// verificar que el producto exista, esté disponible
 	const product = await orm
 		.select()
 		.from(productsTable)
@@ -43,6 +44,11 @@ export const addCartItem = async (
         
 	if (!product || product.length === 0) {
 		return { error: 'PRODUCT_NOT_FOUND' as const };
+	}
+
+	// verificar que tenga stock suficiente
+	if (product[0].stock < qty) {
+		return { error: 'INSUFFICIENT_STOCK' as const };
 	}
 
 	const inserted = await orm

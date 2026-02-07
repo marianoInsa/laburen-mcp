@@ -1,8 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import z from 'zod';
 import { listProducts, searchProductsByName, getProductById } from './handlers/products';
-import { createCart, getCartById, deleteCartById } from './handlers/carts';
-import { addCartItem, listCartItems, removeCartItem } from './handlers/cart_items';
+import { createCart } from './handlers/carts';
+import { addCartItem, removeCartItem } from './handlers/cart_items';
 
 type McpEnv = {
     DB: D1Database;
@@ -102,61 +102,20 @@ mcpServer.registerTool(
 );
 
 mcpServer.registerTool(
-    'cartItems.list',
+    'update_cart',
     {
-        description: 'Listar items de un carrito',
-        inputSchema: z.object({
-            cart_id: z.number().int(),
-        }),
-    },
-    async ({ cart_id }) => {
-        const items = await listCartItems(getDb(), cart_id);
-        return {
-            content: [
-                {
-                    type: 'text',
-                    text: JSON.stringify(items),
-                },
-            ],
-        };
-    }
-);
-
-mcpServer.registerTool(
-    'cartItems.add',
-    {
-        description: 'Agregar un item al carrito',
+        description: 'Agregar o quitar items del carrito segun qty (positivo suma, negativo resta)',
         inputSchema: z.object({
             cart_id: z.number().int(),
             product_id: z.string(),
-            qty: z.number().int().positive(),
+            qty: z.number().int().refine((value) => value !== 0),
         }),
     },
     async ({ cart_id, product_id, qty }) => {
-        const result = await addCartItem(getDb(), { cart_id, product_id, qty });
-        return {
-            content: [
-                {
-                    type: 'text',
-                    text: JSON.stringify(result),
-                },
-            ],
-        };
-    }
-);
+        const result = qty > 0
+            ? await addCartItem(getDb(), { cart_id, product_id, qty })
+            : await removeCartItem(getDb(), { cart_id, product_id, qty: Math.abs(qty) });
 
-mcpServer.registerTool(
-    'cartItems.remove',
-    {
-        description: 'Eliminar o restar cantidad de un item del carrito',
-        inputSchema: z.object({
-            cart_id: z.number().int(),
-            product_id: z.string(),
-            qty: z.number().int().positive(),
-        }),
-    },
-    async ({ cart_id, product_id, qty }) => {
-        const result = await removeCartItem(getDb(), { cart_id, product_id, qty });
         return {
             content: [
                 {
