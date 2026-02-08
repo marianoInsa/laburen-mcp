@@ -1,10 +1,6 @@
 import { Hono } from 'hono';
-import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { StreamableHTTPTransport } from '@hono/mcp';
-import productsRoutes from './routes/products';
-import cartsRoutes from './routes/carts';
-import cartItemsRoutes from './routes/cart_items';
 import mcpServer, { setMcpEnv } from './mcp';
 
 // interfaz para la DB
@@ -15,7 +11,6 @@ export type Bindings = {
 const app = new Hono<{ Bindings: Bindings }>();
 const mcpTransport = new StreamableHTTPTransport();
 
-app.use('/api/*', cors());
 app.use(logger());
 
 // health check
@@ -29,10 +24,6 @@ app.get('/', (c) => {
 app.notFound((c) => {
 	return c.json({ message: 'Ruta no encontrada' }, 404);
 });
-
-app.route('/api/products', productsRoutes);
-app.route('/api/carts', cartsRoutes);
-app.route('/api/cart-items', cartItemsRoutes);
 
 // MCP endpoint
 app.all('/mcp', async (c) => {
