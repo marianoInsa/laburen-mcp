@@ -1,8 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import z from 'zod';
 import { listProducts, searchProductsByName, getProductById } from './handlers/products';
-import { createCart } from './handlers/carts';
-import { addCartItem, removeCartItem } from './handlers/cart_items';
+import { createCart, getActiveCartByUserPhone } from './handlers/carts';
+import { addCartItem, removeCartItem, listCartItems } from './handlers/cart_items';
 
 type McpEnv = {
     DB: D1Database;
@@ -121,6 +121,55 @@ mcpServer.registerTool(
                 {
                     type: 'text',
                     text: JSON.stringify(result),
+                },
+            ],
+        };
+    }
+);
+
+mcpServer.registerTool(
+    'list_cart_items',
+    {
+        description: 'Listar items del carrito por cart_id o por user_phone (carrito activo).',
+        inputSchema: z.object({
+            cart_id: z.number().int().optional(),
+            user_phone: z.string().optional(),
+        }),
+    },
+    async ({ cart_id, user_phone }) => {
+        if (!cart_id && !user_phone) {
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify({ error: 'Se requiere cart_id o user_phone' }),
+                    },
+                ],
+            };
+        }
+
+        let resolvedCartId = cart_id;
+        if (!resolvedCartId && user_phone) {
+            const carts = await getActiveCartByUserPhone(getDb(), user_phone);
+            if (!carts || carts.length === 0) {
+                return {
+                    content: [
+                        {
+                            type: 'text',
+                            text: JSON.stringify({ error: 'CART_NOT_FOUND' }),
+                        },
+                    ],
+                };
+            }
+            resolvedCartId = carts[0].id;
+        }
+
+        const items = await listCartItems(getDb(), resolvedCartId!);
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: JSON.stringify(items),
                 },
             ],
         };

@@ -41,6 +41,20 @@ export const getCartById = async (db: D1Database, id: number) => {
         .all();
 };
 
+export const getActiveCartByUserPhone = async (db: D1Database, user_phone: string) => {
+    const orm = drizzle(db);
+    return orm
+        .select()
+        .from(cartsTable)
+        .where(
+            and(
+                eq(cartsTable.user_phone, user_phone),
+                isNull(cartsTable.deleted_at)
+            )
+        )
+        .all();
+};
+
 export const deleteCartById = async (db: D1Database, id: number) => {
     // Soft delete: set deleted_at timestamp
     const orm = drizzle(db);
