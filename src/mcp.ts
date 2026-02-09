@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import z from 'zod';
-import { listProducts, searchProductsByName, getProductById } from './handlers/products';
+import { listProducts, searchProductsByName, getProductById, listTypesOfClothing } from './handlers/products';
 import { createCart, getActiveCartByUserPhone } from './handlers/carts';
 import { addCartItem, removeCartItem, listCartItems } from './handlers/cart_items';
 
@@ -50,6 +50,25 @@ mcpServer.registerTool(
                 {
                     type: 'text',
                     text: JSON.stringify(products),
+                },
+            ],
+        };
+    }
+);
+
+mcpServer.registerTool(
+    'list_types_of_clothing',
+    {
+        description: 'Listar los tipos de indumentaria disponibles (valores unicos de products.name).',
+        inputSchema: z.object({}),
+    },
+    async () => {
+        const names = await listTypesOfClothing(getDb());
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: JSON.stringify(names),
                 },
             ],
         };

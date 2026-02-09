@@ -9,6 +9,11 @@ export const listProducts = async (db: D1Database, available: boolean = false) =
         : orm.select().from(productsTable).all();
 };
 
+export const listTypesOfClothing = async (db: D1Database) => {
+    const orm = drizzle(db);
+    return orm.selectDistinct({ name: productsTable.name }).from(productsTable).all();
+};
+
 export const searchProductsByName = async (
     db: D1Database, 
     name: string,
