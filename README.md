@@ -41,6 +41,8 @@ Servidor MCP (Model Context Protocol) sobre Cloudflare Workers + Hono con base d
 
 ```
 └── 📁laburen-mcp
+    ├── 📁docs              # Diagrama(s) & documento conceptual
+    ├── 📁prompts           # System Prompt para el Agent Bot en Laburen.com
     ├── 📁src
     ├────── 📁handlers      # Logica de dominio (DB)
     ├────── 📁schemas       # Esquemas Drizzle
