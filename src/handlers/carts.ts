@@ -1,4 +1,4 @@
-import { eq, and, isNull } from 'drizzle-orm';
+import { eq, and, isNull, sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/d1';
 import { cartsTable } from '../schemas/carts';
 
@@ -8,16 +8,24 @@ export const createCart = async (db: D1Database, user_phone: string) => {
     const existingCart = await orm
         .select()
         .from(cartsTable)
-        .where(
-            and(
-                eq(cartsTable.user_phone, user_phone),
-                isNull(cartsTable.deleted_at)
-            )
-        )
+        .where(eq(cartsTable.user_phone, user_phone))
         .all();
-	if (existingCart.length > 0) {
-		return existingCart[0];
-	}
+
+    if (existingCart.length > 0) {
+        const cart = existingCart[0];
+
+        if (cart.deleted_at) {
+            const restored = await orm
+                .update(cartsTable)
+                .set({ deleted_at: null, updated_at: sql`CURRENT_TIMESTAMP` })
+                .where(eq(cartsTable.id, cart.id))
+                .returning()
+                .all();
+            return restored[0] ?? cart;
+        }
+        
+        return cart;
+    }
 
 	const inserted = await orm
 		.insert(cartsTable)
