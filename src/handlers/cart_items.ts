@@ -51,6 +51,23 @@ export const addCartItem = async (
 		return { error: 'INSUFFICIENT_STOCK' as const };
 	}
 
+	const stockUpdate = await orm
+		.update(productsTable)
+		.set({ stock: sql`${productsTable.stock} - ${qty}` })
+		.where(
+			and(
+				eq(productsTable.id, product_id),
+				eq(productsTable.available, 1),
+				sql`${productsTable.stock} >= ${qty}`
+			)
+		)
+		.returning()
+		.all();
+
+	if (!stockUpdate || stockUpdate.length === 0) {
+		return { error: 'INSUFFICIENT_STOCK' as const };
+	}
+
 	const inserted = await orm
 		.insert(cartItemsTable)
 		.values({ cart_id, product_id, qty })
@@ -96,7 +113,13 @@ export const removeCartItem = async (
 
 	const currentQty = items[0].qty;
 
+	const removedQty = qty >= currentQty ? currentQty : qty;
+
+	let updated;
+
 	if (qty >= currentQty) {
+		// eliminar el item
+		
 		await orm
 			.delete(cartItemsTable)
 			.where(
@@ -106,30 +129,31 @@ export const removeCartItem = async (
 				)
 			);
 
-		await orm
-			.update(cartsTable)
-			.set({ updated_at: sql`(current_timestamp)` })
-			.where(eq(cartsTable.id, cart_id));
+	} else {
+		// actualizar la cantidad
 
-		return { item: null };
-	}
-
-	const updated = await orm
-		.update(cartItemsTable)
-		.set({ qty: currentQty - qty })
-		.where(
-			and(
-				eq(cartItemsTable.cart_id, cart_id),
-				eq(cartItemsTable.product_id, product_id)
+		updated = await orm
+			.update(cartItemsTable)
+			.set({ qty: currentQty - qty })
+			.where(
+				and(
+					eq(cartItemsTable.cart_id, cart_id),
+					eq(cartItemsTable.product_id, product_id)
+				)
 			)
-		)
-		.returning()
-		.all();
+			.returning()
+			.all();
+	}
+	
+	await orm
+		.update(productsTable)
+		.set({ stock: sql`${productsTable.stock} + ${removedQty}` })
+		.where(eq(productsTable.id, product_id));
 
 	await orm
 		.update(cartsTable)
 		.set({ updated_at: sql`(current_timestamp)` })
 		.where(eq(cartsTable.id, cart_id));
 
-	return { item: updated[0] ?? null };
+	return { item: updated ? updated[0] ?? null : null };
 };
