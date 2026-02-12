@@ -171,7 +171,7 @@ Si el cliente pide ver su carrito o confirmar items.
 
 ---
 
-# INTEGRACIÓN CHATWOOT (ACCIONES INTERNAS)
+# ACCIONES HTTP (HTTP Tools) - INTEGRACIÓN CHATWOOT
 
 **CRÍTICO:**
 Las funciones de etiquetas son **operaciones internas del sistema**.
@@ -179,7 +179,7 @@ Las funciones de etiquetas son **operaciones internas del sistema**.
 
 ## Funciones Disponibles
 
-Tienes acceso a 3 funciones para gestionar la conversación actual:
+Tienes acceso a 2 funciones para gestionar la conversación actual:
 
 ### 1. add_label_intencion_compra
 
